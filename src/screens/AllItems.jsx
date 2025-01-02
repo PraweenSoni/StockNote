@@ -1,23 +1,29 @@
-import {FlatList, StyleSheet, Text, View} from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-const AllItems = ({data}) => {
+const AllItems = ({ data }) => {
   return (
-    <View>
+    <View style={styles.container}>
+      {/* Fixed Header */}
       <View style={styles.headingContainer}>
         <Text style={styles.headingTxt}>Items</Text>
-        <Text style={styles.headingTxt}>Quantit</Text>
+        <Text style={styles.headingTxt}>Quantity</Text>
       </View>
-      <FlatList
-        data={data}
-        keyExtractor={item => item.id}
-        renderItem={({item}) => (
-          <View style={[styles.itemContainer, {backgroundColor: item.stock < 20 ? "#FFCCCC" : "#D7F68FFF"}]}>
+
+      {/* Scrollable Content */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {data.map((item) => (
+          <View
+            key={item.id}
+            style={[
+              styles.itemContainer,
+              { backgroundColor: item.stock < 20 ? "#FFCCCC" : "#D7F68FFF" },
+            ]}
+          >
             <Text style={styles.itemTxt}>{item.name}</Text>
             <Text style={styles.itemTxt}>{item.stock}</Text>
           </View>
-        )}
-        contentContainerStyle={{gap:10}}
-      />
+        ))}
+      </ScrollView>
     </View>
   );
 };
@@ -25,24 +31,35 @@ const AllItems = ({data}) => {
 export default AllItems;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1, // Ensures full height layout
+    paddingVertical: 10,
+  },
   headingContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 15,
-    paddingVertical:10
-},
-headingTxt: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc', // Separator line
+    backgroundColor: '#f9f9f9', // Optional: Background for header
+  },
+  headingTxt: {
     fontWeight: '500',
     fontSize: 16,
-},
-itemContainer:{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingHorizontal: 15,
-      paddingVertical: 10,
-      borderRadius:7,
   },
-  itemTxt:{
-
-  }
+  scrollContainer: {
+    paddingVertical: 10,
+    gap: 10, // Space between items
+  },
+  itemContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 7,
+  },
+  itemTxt: {
+    fontSize: 14,
+  },
 });

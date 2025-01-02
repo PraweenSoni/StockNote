@@ -5,25 +5,7 @@ import { useState } from 'react';
 
 const HomeScreen = () => {
   const [view, setview] = useState(0);
-  const [data, setdata] = useState([
-    {id:1, name: "orange", stock: 5, unit : "kg"},
-    {id:2, name: "orange", stock: 15, unit : "kg"},
-    {id:3, name: "orange", stock: 25, unit : "kg"},
-    {id:4, name: "orange", stock: 5, unit : "kg"},
-    {id:5, name: "orange", stock: 35, unit : "kg"},
-    {id:6, name: "orange", stock: 25, unit : "kg"},
-    {id:7, name: "cd", stock: 5, unit : "kg"},
-    {id:8, name: "DSc", stock: 15, unit : "kg"},
-    {id:9, name: "Dj", stock: 25, unit : "kg"},
-    {id:10, name: "nan", stock: 5, unit : "kg"},
-    {id:11, name: "magi", stock: 35, unit : "kg"},
-    {id:12, name: "Manh", stock: 25, unit : "kg"},
-    {id:13, name: "Pks", stock: 15, unit : "kg"},
-    {id:14, name: "Dj", stock: 25, unit : "kg"},
-    {id:15, name: "Raj", stock: 5, unit : "kg"},
-    {id:16, name: "magi", stock: 35, unit : "kg"},
-    {id:17, name: "Manh", stock: 25, unit : "kg"},
-])
+  const [data, setdata] = useState([]);
 
   return (
     <View style={styles.container}>
