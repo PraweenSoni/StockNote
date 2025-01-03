@@ -16,11 +16,11 @@ const AllItems = ({ data }) => {
             key={item.id}
             style={[
               styles.itemContainer,
-              { backgroundColor: item.stock < 20 ? "#FFCCCC" : "#D7F68FFF" },
+              { backgroundColor: item.stock > item.stockMin ? '#D7F68FFF' : '#FFCCCC' },
             ]}
           >
             <Text style={styles.itemTxt}>{item.name}</Text>
-            <Text style={styles.itemTxt}>{item.stock}</Text>
+            <Text style={styles.itemTxt}>{item.stock} {item.category}</Text>
           </View>
         ))}
       </ScrollView>
@@ -32,7 +32,7 @@ export default AllItems;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Ensures full height layout
+    flex: 1,
     paddingVertical: 10,
   },
   headingContainer: {
@@ -41,8 +41,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc', // Separator line
-    backgroundColor: '#f9f9f9', // Optional: Background for header
+    borderBottomColor: '#ccc',
+    backgroundColor: '#f9f9f9',
   },
   headingTxt: {
     fontWeight: '500',
