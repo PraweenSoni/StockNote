@@ -1,12 +1,20 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import EditIcon from '../../assets/icons/EditIcon';
 
 const AllItems = ({ data }) => {
+  const editItem = () => {
+    alert('Currently Feature not avaliable.');
+  }
   return (
     <View style={styles.container}>
       {/* Fixed Header */}
       <View style={styles.headingContainer}>
         <Text style={styles.headingTxt}>Items</Text>
-        <Text style={styles.headingTxt}>Quantity</Text>
+        <View style={{flexDirection:'row', gap:15}}>
+          <Text style={styles.headingTxt}>AMT</Text>
+          <Text style={styles.headingTxt}>QTY</Text>
+          <Text style={styles.headingTxt}>EDT</Text>
+        </View>
       </View>
 
       {/* Scrollable Content */}
@@ -20,7 +28,13 @@ const AllItems = ({ data }) => {
             ]}
           >
             <Text style={styles.itemTxt}>{item.name}</Text>
-            <Text style={styles.itemTxt}>{item.stock} {item.category}</Text>
+            <View style={{flexDirection:'row', gap:15}}>
+              <Text style={styles.itemTxt}>{item.amount} Rs</Text>
+              <Text style={styles.itemTxt}>{item.stock} {item.category}</Text>
+              <Pressable onPress={editItem}>
+                <EditIcon style={styles.icon} fill="#1167b1" />
+              </Pressable>
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -60,6 +74,10 @@ const styles = StyleSheet.create({
     borderRadius: 7,
   },
   itemTxt: {
-    fontSize: 14,
+    fontSize: 16,
   },
+  icon:{
+    height:20,
+    width:20
+  }
 });

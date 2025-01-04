@@ -10,18 +10,21 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {useState} from 'react';
+import DeleteIcon from '../../assets/icons/DeleteIcon';
+import EditIcon from '../../assets/icons/EditIcon';
 
 const CreateScreen = ({data, setdata}) => {
   const [itemName, setitemName] = useState('');
   const [stockAmt, setstockAmt] = useState('');
-  const [stockMinAmt, setstockMinAmt] = useState('');
+  const [stockQty, setstockQty] = useState('');
+  const [stockMinQty, setstockMinQty] = useState('');
   const [isEdit, setisEdit] = useState(false);
   const [editItemId, seteditItemId] = useState(null);
 
   // Dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
-  const categories = ['Gram', 'KG', 'ML', 'Litre', 'Pieces', 'Custom'];
+  const categories = ['G', 'KG', 'ML', 'LTR', 'Pieces', 'Custom'];
 
   const addItem = () => {
     if (selectedCategory === 'Select Category') {
@@ -31,14 +34,16 @@ const CreateScreen = ({data, setdata}) => {
     const newItem = {
       id: Date.now(),
       name: itemName,
-      stock: stockAmt,
-      stockMin : stockMinAmt,
+      amount: stockAmt,
+      stock: stockQty,
+      stockMin: stockMinQty,
       category: selectedCategory,
     };
     setdata([...data, newItem]);
     setitemName('');
     setstockAmt('');
-    setstockMinAmt('');
+    setstockQty('');
+    setstockMinQty('');
     setSelectedCategory('Select Category');
     setisEdit(false);
   };
@@ -47,8 +52,9 @@ const CreateScreen = ({data, setdata}) => {
     setisEdit(true);
     setitemName(item.name);
     seteditItemId(item.id);
-    setstockAmt(item.stock);
-    setstockMinAmt(item.stockMin);
+    setstockAmt(item.amount);
+    setstockQty(item.stock);
+    setstockMinQty(item.stockMin);
     setSelectedCategory(item.category);
   };
 
@@ -59,8 +65,9 @@ const CreateScreen = ({data, setdata}) => {
           ? {
               ...item,
               name: itemName,
-              stock: stockAmt,
-              stockMin: stockMinAmt,
+              amount: stockAmt,
+              stock: stockQty,
+              stockMin: stockMinQty,
               category: selectedCategory,
             }
           : item,
@@ -68,7 +75,8 @@ const CreateScreen = ({data, setdata}) => {
     );
     setitemName('');
     setstockAmt('');
-    setstockMinAmt('');
+    setstockQty('');
+    setstockMinQty('');
     setSelectedCategory('Select Category');
     setisEdit(false);
   };
@@ -91,20 +99,12 @@ const CreateScreen = ({data, setdata}) => {
         />
         <View style={{flexDirection: 'row'}}>
           <TextInput
-            placeholder="Item Qty"
+            placeholder="Item Amount"
             placeholderTextColor="#999"
-            style={[styles.input, styles.inputAmt]}
+            style={[styles.input, { width: '50%', marginEnd: '4%'}]}
             keyboardType="numeric"
             value={stockAmt}
             onChangeText={item => setstockAmt(item)}
-          />
-          <TextInput
-            placeholder="Min Qty"
-            placeholderTextColor="#999"
-            style={[styles.input, styles.inputAmt]}
-            keyboardType="numeric"
-            value={stockMinAmt}
-            onChangeText={item => setstockMinAmt(item)}
           />
           <View>
             {/* Dropdown Implementation */}
@@ -130,8 +130,23 @@ const CreateScreen = ({data, setdata}) => {
             )}
           </View>
         </View>
-        <View style={{flexDirection:'row', justifyContent:'space-around'}}>
-        
+        <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+          <TextInput
+            placeholder="Item Quantity"
+            placeholderTextColor="#999"
+            style={[styles.input, styles.inputAmt]}
+            keyboardType="numeric"
+            value={stockQty}
+            onChangeText={item => setstockQty(item)}
+          />
+          <TextInput
+            placeholder="Min Quantity"
+            placeholderTextColor="#999"
+            style={[styles.input, styles.inputAmt]}
+            keyboardType="numeric"
+            value={stockMinQty}
+            onChangeText={item => setstockMinQty(item)}
+          />
         </View>
         <Pressable
           style={styles.stockBtn}
@@ -142,12 +157,14 @@ const CreateScreen = ({data, setdata}) => {
         </Pressable>
 
         <View style={{flex: 1}}>
-          <View style={{marginBottom:5}}>
-            <Text style={{fontSize:16, marginBottom:10}}>All items in the stocks</Text>
+          <View style={{marginBottom: 5}}>
+            <Text style={{fontSize: 16, marginBottom: 10}}>
+              All items in the stocks
+            </Text>
             <View style={styles.headingTxtDiv}>
               <Text style={styles.headingTxt}>Items Name</Text>
-              <View style={{flexDirection:'row'}}>
-                <Text style={{paddingEnd:'8%'}}>Min QTY</Text>
+              <View style={{flexDirection: 'row'}}>
+                <Text style={{paddingEnd: '8%'}}>Min QTY</Text>
                 <Text>QTY</Text>
               </View>
             </View>
@@ -160,7 +177,10 @@ const CreateScreen = ({data, setdata}) => {
               <View
                 style={[
                   styles.itemContainer,
-                  {backgroundColor: item.stock > item.stockMin ? '#D7F68FFF' : '#FFCCCC'}
+                  {
+                    backgroundColor:
+                      item.stock > item.stockMin ? '#D7F68FFF' : '#FFCCCC',
+                  },
                 ]}>
                 <Text style={styles.itemTxt}>{item.name}</Text>
                 <View style={{flexDirection: 'row', gap: 15}}>
@@ -171,10 +191,10 @@ const CreateScreen = ({data, setdata}) => {
                     {item.stock} {item.category}
                   </Text>
                   <Pressable onPress={() => editItem(item)}>
-                    <Text style={styles.itemTxt}>Edit</Text>
+                    <EditIcon style={styles.icon} fill="#1167b1" />
                   </Pressable>
                   <Pressable onPress={() => deleteItem(item.id)}>
-                    <Text style={styles.itemTxt}>Delete</Text>
+                    <DeleteIcon style={styles.icon} fill="red" />
                   </Pressable>
                 </View>
               </View>
@@ -201,13 +221,12 @@ const styles = StyleSheet.create({
     borderColor: '#999',
     paddingHorizontal: 15,
     paddingVertical: 10,
-    fontSize:16,
+    fontSize: 16,
     borderRadius: 7,
   },
   inputAmt: {
-    width: '28%',
+    width: '47%',
     maxHeight: 45,
-    marginEnd: '3%',
   },
   dropdownButton: {
     borderWidth: 1.5,
@@ -216,7 +235,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 7,
     backgroundColor: '#f9f9f9',
-    width: '120',
+    width: '68%',
   },
   dropdownButtonText: {
     fontSize: 14,
@@ -249,11 +268,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 14,
   },
-  headingTxtDiv:{
-    flexDirection:'row',
-    justifyContent:'space-between',
-    width:'68%',
-    paddingStart:'3%'
+  headingTxtDiv: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '68%',
+    paddingStart: '3%',
   },
   headingTxt: {
     fontWeight: '500',
@@ -266,7 +285,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 7,
   },
-  itemTxt: {
-    fontSize: 14,
+  icon: {
+    height: 20,
+    width: 20,
+    marginStart: 5,
   },
 });

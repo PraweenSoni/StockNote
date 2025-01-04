@@ -2,6 +2,7 @@ import {Pressable, StyleSheet, Text, View} from 'react-native';
 import AllItems from './AllItems';
 import CreateScreen from './CreateScreen';
 import {useState} from 'react';
+import SettingIcon from '../../assets/icons/SettingIcon';
 
 const HomeScreen = () => {
   const [view, setview] = useState(0);
@@ -11,7 +12,9 @@ const HomeScreen = () => {
     <View style={styles.container}>
       <View style={{flexDirection:'row',justifyContent:'space-between', borderWidth:1, borderColor:'#fff'}}>
         <Text style={styles.title}>Dashboard</Text>
-        <Text style={styles.title}>setting</Text>
+        <Text style={styles.title}>
+          <SettingIcon style={styles.Sicon}/>
+        </Text>
       </View>
       <View style={styles.btnContainer}>
         <Pressable
@@ -67,6 +70,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+  },
+  Sicon:{
+    height:25,
+    width:25
   },
   btnContainer: {
     flexDirection: 'row',
