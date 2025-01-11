@@ -1,12 +1,26 @@
 import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {useEffect, useState} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import AllItems from './AllItems';
 import CreateScreen from './CreateScreen';
-import {useState} from 'react';
 import SettingIcon from '../../assets/icons/SettingIcon';
 
 const HomeScreen = () => {
   const [view, setview] = useState(0);
   const [data, setdata] = useState([]);
+    // Load data from AsyncStorage on mount
+    const fetchData = async () => {
+      const storedData = await AsyncStorage.getItem('stockData');
+      setdata(storedData ? JSON.parse(storedData) : []);
+    };
+    useEffect(() => {
+      fetchData();
+    }, []);
+  
+    // Update AsyncStorage whenever data changes
+    useEffect(() => {
+      fetchData();
+    }, [view]);
 
   return (
     <View style={styles.container}>
@@ -50,7 +64,7 @@ const HomeScreen = () => {
       </View>
 
       {view === 0 && <AllItems data={data} />}
-      {view === 1 && <AllItems data={data.filter(item => item.stock < item.stockMin)} />}
+      {view === 1 && <AllItems data={data} lowStockOnly/>}
       {view === 2 && <CreateScreen data={data} setdata={setdata} />}
     </View>
   );

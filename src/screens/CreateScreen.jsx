@@ -9,11 +9,12 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeleteIcon from '../../assets/icons/DeleteIcon';
 import EditIcon from '../../assets/icons/EditIcon';
 
-const CreateScreen = ({data, setdata}) => {
+const CreateScreen = () => {
   const [itemName, setitemName] = useState('');
   const [stockAmt, setstockAmt] = useState('');
   const [stockQty, setstockQty] = useState('');
@@ -26,9 +27,29 @@ const CreateScreen = ({data, setdata}) => {
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
   const categories = ['G', 'KG', 'ML', 'LTR', 'Pieces', 'Custom'];
 
+  // Data management using AsyncStorage
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    // Fetch stored data when the component mounts
+    const fetchData = async () => {
+      const storedData = await AsyncStorage.getItem('stockData');
+      if (storedData) {
+        setData(JSON.parse(storedData));
+      }
+    };
+    fetchData();
+  }, []);
+
+  const saveData = async newData => {
+    // Save data to AsyncStorage
+    await AsyncStorage.setItem('stockData', JSON.stringify(newData));
+    setData(newData);
+  };
+
   const addItem = () => {
     if (selectedCategory === 'Select Category') {
-      alert('select category!');
+      alert('Select category!');
       return;
     }
     const newItem = {
@@ -39,13 +60,9 @@ const CreateScreen = ({data, setdata}) => {
       stockMin: stockMinQty,
       category: selectedCategory,
     };
-    setdata([...data, newItem]);
-    setitemName('');
-    setstockAmt('');
-    setstockQty('');
-    setstockMinQty('');
-    setSelectedCategory('Select Category');
-    setisEdit(false);
+    const newData = [...data, newItem];
+    saveData(newData);
+    resetInputs();
   };
 
   const editItem = item => {
@@ -59,30 +76,34 @@ const CreateScreen = ({data, setdata}) => {
   };
 
   const updateItem = () => {
-    setdata(
-      data.map(item =>
-        item.id === editItemId
-          ? {
-              ...item,
-              name: itemName,
-              amount: stockAmt,
-              stock: stockQty,
-              stockMin: stockMinQty,
-              category: selectedCategory,
-            }
-          : item,
-      ),
+    const updatedData = data.map(item =>
+      item.id === editItemId
+        ? {
+            ...item,
+            name: itemName,
+            amount: stockAmt,
+            stock: stockQty,
+            stockMin: stockMinQty,
+            category: selectedCategory,
+          }
+        : item,
     );
+    saveData(updatedData);
+    resetInputs();
+  };
+
+  const deleteItem = id => {
+    const filteredData = data.filter(item => item.id !== id);
+    saveData(filteredData);
+  };
+
+  const resetInputs = () => {
     setitemName('');
     setstockAmt('');
     setstockQty('');
     setstockMinQty('');
     setSelectedCategory('Select Category');
     setisEdit(false);
-  };
-
-  const deleteItem = id => {
-    setdata(data.filter(item => item.id !== id));
   };
 
   return (
@@ -95,16 +116,16 @@ const CreateScreen = ({data, setdata}) => {
           placeholderTextColor="#999"
           style={styles.input}
           value={itemName}
-          onChangeText={item => setitemName(item)}
+          onChangeText={setitemName}
         />
         <View style={{flexDirection: 'row'}}>
           <TextInput
             placeholder="Item Amount"
             placeholderTextColor="#999"
-            style={[styles.input, { width: '50%', marginEnd: '4%'}]}
+            style={[styles.input, {width: '50%', marginEnd: '4%'}]}
             keyboardType="numeric"
             value={stockAmt}
-            onChangeText={item => setstockAmt(item)}
+            onChangeText={setstockAmt}
           />
           <View>
             {/* Dropdown Implementation */}
@@ -137,7 +158,7 @@ const CreateScreen = ({data, setdata}) => {
             style={[styles.input, styles.inputAmt]}
             keyboardType="numeric"
             value={stockQty}
-            onChangeText={item => setstockQty(item)}
+            onChangeText={setstockQty}
           />
           <TextInput
             placeholder="Min Quantity"
@@ -145,7 +166,7 @@ const CreateScreen = ({data, setdata}) => {
             style={[styles.input, styles.inputAmt]}
             keyboardType="numeric"
             value={stockMinQty}
-            onChangeText={item => setstockMinQty(item)}
+            onChangeText={setstockMinQty}
           />
         </View>
         <Pressable
@@ -169,7 +190,6 @@ const CreateScreen = ({data, setdata}) => {
               </View>
             </View>
           </View>
-
           <FlatList
             data={data}
             keyExtractor={item => item.id.toString()}

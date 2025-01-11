@@ -1,42 +1,57 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import EditIcon from '../../assets/icons/EditIcon';
 
-const AllItems = ({ data }) => {
+const AllItems = ({ data = [], lowStockOnly = false }) => {
+  const filteredData = lowStockOnly
+    ? data.filter((item) => item.stock < item.stockMin)
+    : data;
+
   const editItem = () => {
-    alert('Currently Feature not avaliable.');
-  }
+    alert('Currently, this feature is not available.');
+  };
+
   return (
     <View style={styles.container}>
-      {/* Fixed Header */}
+      {/* Header */}
       <View style={styles.headingContainer}>
         <Text style={styles.headingTxt}>Items</Text>
-        <View style={{flexDirection:'row', gap:15}}>
+        <View style={styles.headingDetails}>
           <Text style={styles.headingTxt}>AMT</Text>
           <Text style={styles.headingTxt}>QTY</Text>
           <Text style={styles.headingTxt}>EDT</Text>
         </View>
       </View>
 
-      {/* Scrollable Content */}
+      {/* Items List */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {data.map((item) => (
+        {filteredData.map((item) => (
           <View
             key={item.id}
             style={[
               styles.itemContainer,
-              { backgroundColor: item.stock > item.stockMin ? '#D7F68FFF' : '#FFCCCC' },
+              {
+                backgroundColor:
+                  item.stock > item.stockMin ? '#D7F68FFF' : '#FFCCCC',
+              },
             ]}
           >
             <Text style={styles.itemTxt}>{item.name}</Text>
-            <View style={{flexDirection:'row', gap:15}}>
+            <View style={styles.itemDetails}>
               <Text style={styles.itemTxt}>{item.amount} Rs</Text>
-              <Text style={styles.itemTxt}>{item.stock} {item.category}</Text>
+              <Text style={styles.itemTxt}>
+                {item.stock} {item.category}
+              </Text>
               <Pressable onPress={editItem}>
                 <EditIcon style={styles.icon} fill="#1167b1" />
               </Pressable>
             </View>
           </View>
         ))}
+        {filteredData.length === 0 && (
+          <Text style={styles.emptyText}>
+            {lowStockOnly ? 'No low-stock items.' : 'No items available.'}
+          </Text>
+        )}
       </ScrollView>
     </View>
   );
@@ -62,6 +77,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 16,
   },
+  headingDetails: {
+    flexDirection: 'row',
+    gap: 15,
+  },
   scrollContainer: {
     paddingVertical: 10,
     gap: 10, // Space between items
@@ -73,11 +92,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 7,
   },
+  itemDetails: {
+    flexDirection: 'row',
+    gap: 15,
+  },
   itemTxt: {
     fontSize: 16,
   },
-  icon:{
-    height:20,
-    width:20
-  }
+  icon: {
+    height: 20,
+    width: 20,
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#888',
+    marginTop: 20,
+    fontSize: 16,
+  },
 });
