@@ -34,7 +34,7 @@ const AllItems = ({ data, lowStockOnly, navigation }) => {
 
   const handleLongPress = (item) => {
     // Navigate to CreateScreen with the selected item data
-    navigation.navigate('CreateScreen', { itemData: item });
+    // navigation.navigate('CreateScreen', { itemData: item });
   };
 
   const renderItem = ({ item }) => {

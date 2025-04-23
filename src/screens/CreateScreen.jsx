@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  ScrollView,
   TextInput,
   View,
   Pressable,
@@ -65,8 +66,15 @@ const CreateScreen = ({ route }) => {
   };
 
   const addItem = () => {
-    if (selectedCategory === 'Select Category') {
-      alert('Select category!');
+    if (!itemName) {
+      alert('Item name is required!');
+      return;
+    }
+    const isDuplicate = data.some(
+      (item) => item.name.toLowerCase() === itemName.toLowerCase()
+    );
+    if (isDuplicate) {
+      alert('Item with this name already exists.');
       return;
     }
     const newItem = {
@@ -104,17 +112,17 @@ const CreateScreen = ({ route }) => {
     const updatedData = data.map((item) =>
       item.id === editItemId
         ? {
-            ...item,
-            name: itemName,
-            amount: stockAmt,
-            stock: stockQty,
-            stockMin: stockMinQty,
-            category: selectedCategory,
-            shopName,
-            link,
-            tags,
-            description,
-          }
+          ...item,
+          name: itemName,
+          amount: stockAmt,
+          stock: stockQty,
+          stockMin: stockMinQty,
+          category: selectedCategory,
+          shopName,
+          link,
+          tags,
+          description,
+        }
         : item
     );
     saveData(updatedData);
@@ -179,120 +187,121 @@ const CreateScreen = ({ route }) => {
         style={styles.flexContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.formContainer}>
-          <TextInput
-            placeholder="Search by name or tags"
-            value={searchText}
-            onChangeText={setSearchText}
-            style={styles.input}
-          />
-
-          <TextInput
-            placeholder="Enter item name..."
-            value={itemName}
-            onChangeText={setItemName}
-            style={styles.input}
-          />
-
-          <View style={styles.row}>
+        <ScrollView contentContainerStyle={{ padding: 16 }}>
+          <View style={styles.formContainer}>
             <TextInput
-              placeholder="Item Amount"
-              value={stockAmt}
-              keyboardType="numeric"
-              onChangeText={setStockAmt}
-              style={[styles.input, { width: '48%' }]}
+              placeholder="Search by name or tags"
+              value={searchText}
+              onChangeText={setSearchText}
+              style={styles.input}
             />
-            <View style={[styles.dropdownContainer, { width: '48%' }]}>
-              <TouchableOpacity
-                style={styles.dropdownButton}
-                onPress={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                <Text style={styles.dropdownButtonText}>
-                  {selectedCategory}
-                </Text>
-              </TouchableOpacity>
-              {isDropdownOpen && (
-                <View style={styles.dropdownMenu}>
-                  {categories.map((category, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={styles.dropdownItem}
-                      onPress={() => {
-                        setSelectedCategory(category);
-                        setIsDropdownOpen(false);
-                      }}
-                    >
-                      <Text style={styles.dropdownItemText}>{category}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
+
+            <TextInput
+              placeholder="Enter item name..."
+              value={itemName}
+              onChangeText={setItemName}
+              style={styles.input}
+            />
+
+            <View style={styles.row}>
+              <TextInput
+                placeholder="Item Amount"
+                value={stockAmt}
+                keyboardType="numeric"
+                onChangeText={setStockAmt}
+                style={[styles.input, { width: '48%' }]}
+              />
+              <View style={[styles.dropdownContainer, { width: '48%' }]}>
+                <TouchableOpacity
+                  style={styles.dropdownButton}
+                  onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                  <Text style={styles.dropdownButtonText}>
+                    {selectedCategory}
+                  </Text>
+                </TouchableOpacity>
+                {isDropdownOpen && (
+                  <View style={styles.dropdownMenu}>
+                    {categories.map((category, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setSelectedCategory(category);
+                          setIsDropdownOpen(false);
+                        }}
+                      >
+                        <Text style={styles.dropdownItemText}>{category}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
             </View>
-          </View>
 
-          <View style={styles.row}>
+            <View style={styles.row}>
+              <TextInput
+                placeholder="Item Quantity"
+                value={stockQty}
+                keyboardType="numeric"
+                onChangeText={setStockQty}
+                style={[styles.input, styles.smallInput]}
+              />
+              <TextInput
+                placeholder="Min Quantity"
+                value={stockMinQty}
+                keyboardType="numeric"
+                onChangeText={setStockMinQty}
+                style={[styles.input, styles.smallInput]}
+              />
+            </View>
+
+            <View style={styles.row}>
+              <TextInput
+                placeholder="Shop Name"
+                value={shopName}
+                onChangeText={setShopName}
+                style={[styles.input, styles.smallInput]}
+              />
+              <TextInput
+                placeholder="Link"
+                value={link}
+                onChangeText={setLink}
+                style={[styles.input, styles.smallInput]}
+              />
+            </View>
+
             <TextInput
-              placeholder="Item Quantity"
-              value={stockQty}
-              keyboardType="numeric"
-              onChangeText={setStockQty}
-              style={[styles.input, styles.smallInput]}
+              placeholder="Tags"
+              value={tags}
+              onChangeText={setTags}
+              style={styles.input}
             />
+
             <TextInput
-              placeholder="Min Quantity"
-              value={stockMinQty}
-              keyboardType="numeric"
-              onChangeText={setStockMinQty}
-              style={[styles.input, styles.smallInput]}
+              style={styles.textInput}
+              placeholder="Item description"
+              multiline
+              value={description}
+              onChangeText={setDescription}
             />
-          </View>
 
-          <View style={styles.row}>
-            <TextInput
-              placeholder="Shop Name"
-              value={shopName}
-              onChangeText={setShopName}
-              style={[styles.input, styles.smallInput]}
-            />
-            <TextInput
-              placeholder="Link"
-              value={link}
-              onChangeText={setLink}
-              style={[styles.input, styles.smallInput]}
-            />
-          </View>
-
-          <TextInput
-            placeholder="Tags"
-            value={tags}
-            onChangeText={setTags}
-            style={styles.input}
-          />
-
-          <TextInput
-            style={styles.textInput}
-            placeholder="Item description"
-            multiline
-            value={description}
-            onChangeText={setDescription}
-          />
-
-          <Pressable
-            style={styles.button}
-            onPress={isEdit ? updateItem : addItem}
-          >
-            <Text style={styles.buttonText}>
-              {isEdit ? 'EDIT ITEM' : 'ADD ITEM'} IN STOCK
-            </Text>
-          </Pressable>
-
-          {isEdit && (
-            <Pressable style={styles.deleteButton} onPress={deleteItem}>
-              <Text style={styles.deleteButtonText}>DELETE ITEM</Text>
+            <Pressable
+              style={styles.button}
+              onPress={isEdit ? updateItem : addItem}
+            >
+              <Text style={styles.buttonText}>
+                {isEdit ? 'EDIT ITEM' : 'ADD ITEM'} IN STOCK
+              </Text>
             </Pressable>
-          )}
-        </View>
 
+            {isEdit && (
+              <Pressable style={styles.deleteButton} onPress={deleteItem}>
+                <Text style={styles.deleteButtonText}>DELETE ITEM</Text>
+              </Pressable>
+            )}
+          </View>
+        </ScrollView>
         <FlatList
           data={filteredData}
           keyExtractor={(item) => item.id.toString()}
