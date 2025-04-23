@@ -1,37 +1,41 @@
+import React, { useState, useEffect } from 'react';
 import {
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
+  TextInput,
+  View,
+  Pressable,
+  Text,
   TouchableOpacity,
+  FlatList,
+  Alert,
 } from 'react-native';
-import {useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeleteIcon from '../../assets/icons/DeleteIcon';
 import EditIcon from '../../assets/icons/EditIcon';
 
-const CreateScreen = () => {
-  const [itemName, setitemName] = useState('');
-  const [stockAmt, setstockAmt] = useState('');
-  const [stockQty, setstockQty] = useState('');
-  const [stockMinQty, setstockMinQty] = useState('');
-  const [isEdit, setisEdit] = useState(false);
-  const [editItemId, seteditItemId] = useState(null);
+const CreateScreen = ({ route }) => {
+  const [itemName, setItemName] = useState('');
+  const [stockAmt, setStockAmt] = useState('');
+  const [stockQty, setStockQty] = useState('');
+  const [stockMinQty, setStockMinQty] = useState('');
+  const [description, setDescription] = useState('');
+  const [shopName, setShopName] = useState('');
+  const [link, setLink] = useState('');
+  const [tags, setTags] = useState('');
+  const [isEdit, setIsEdit] = useState(false);
+  const [editItemId, setEditItemId] = useState(null);
 
-  // Dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
-  const categories = ['G', 'KG', 'ML', 'LTR', 'Pieces', 'Custom'];
+  const categories = ['Low', 'Medium', 'High', 'CTM'];
 
-  // Data management using AsyncStorage
   const [data, setData] = useState([]);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
-    // Fetch stored data when the component mounts
     const fetchData = async () => {
       const storedData = await AsyncStorage.getItem('stockData');
       if (storedData) {
@@ -41,10 +45,23 @@ const CreateScreen = () => {
     fetchData();
   }, []);
 
-  const saveData = async newData => {
-    // Save data to AsyncStorage
+  const saveData = async (newData) => {
     await AsyncStorage.setItem('stockData', JSON.stringify(newData));
     setData(newData);
+  };
+
+  const resetInputs = () => {
+    setItemName('');
+    setStockAmt('');
+    setStockQty('');
+    setStockMinQty('');
+    setShopName('');
+    setLink('');
+    setTags('');
+    setDescription('');
+    setSelectedCategory('Select Category');
+    setIsEdit(false);
+    setEditItemId(null);
   };
 
   const addItem = () => {
@@ -59,24 +76,32 @@ const CreateScreen = () => {
       stock: stockQty,
       stockMin: stockMinQty,
       category: selectedCategory,
+      shopName,
+      link,
+      tags,
+      description,
     };
     const newData = [...data, newItem];
     saveData(newData);
     resetInputs();
   };
 
-  const editItem = item => {
-    setisEdit(true);
-    setitemName(item.name);
-    seteditItemId(item.id);
-    setstockAmt(item.amount);
-    setstockQty(item.stock);
-    setstockMinQty(item.stockMin);
-    setSelectedCategory(item.category);
+  const editItem = (item) => {
+    setIsEdit(true);
+    setEditItemId(item.id);
+    setItemName(item.name);
+    setStockAmt(item.amount);
+    setStockQty(item.stock);
+    setStockMinQty(item.stockMin);
+    setShopName(item.shopName || '');
+    setLink(item.link || '');
+    setTags(item.tags || '');
+    setDescription(item.description || '');
+    setSelectedCategory(item.category || 'Select Category');
   };
 
   const updateItem = () => {
-    const updatedData = data.map(item =>
+    const updatedData = data.map((item) =>
       item.id === editItemId
         ? {
             ...item,
@@ -85,229 +110,298 @@ const CreateScreen = () => {
             stock: stockQty,
             stockMin: stockMinQty,
             category: selectedCategory,
+            shopName,
+            link,
+            tags,
+            description,
           }
-        : item,
+        : item
     );
     saveData(updatedData);
     resetInputs();
   };
 
-  const deleteItem = id => {
-    const filteredData = data.filter(item => item.id !== id);
-    saveData(filteredData);
+  const deleteItem = () => {
+    Alert.alert(
+      'Delete Confirmation',
+      'Are you sure you want to delete this item?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            const filteredData = data.filter((item) => item.id !== editItemId);
+            saveData(filteredData);
+            resetInputs();
+          },
+        },
+      ]
+    );
   };
 
-  const resetInputs = () => {
-    setitemName('');
-    setstockAmt('');
-    setstockQty('');
-    setstockMinQty('');
-    setSelectedCategory('Select Category');
-    setisEdit(false);
+  const filteredData = data.filter((item) => {
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.tags.toLowerCase().includes(searchText.toLowerCase());
+    return matchesSearch;
+  });
+
+  const renderItem = ({ item }) => {
+    const isLowStock = parseInt(item.stock) <= parseInt(item.stockMin);
+    return (
+      <TouchableOpacity
+        style={[
+          styles.listItem,
+          { backgroundColor: isLowStock ? '#FFCDD2' : '#E0F7FA' },
+        ]}
+        onLongPress={() => editItem(item)}
+      >
+        <View>
+          <Text style={styles.itemText}>{item.name}</Text>
+          <Text style={styles.itemText}>Qty: {item.stock}</Text>
+        </View>
+        <View style={styles.itemActions}>
+          <Pressable onPress={() => editItem(item)}>
+            <EditIcon style={styles.icon} fill="#1167b1" />
+          </Pressable>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{flex: 1}}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.container}>
-        <TextInput
-          placeholder="Enter an item name..."
-          placeholderTextColor="#999"
-          style={styles.input}
-          value={itemName}
-          onChangeText={setitemName}
-        />
-        <View style={{flexDirection: 'row'}}>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.flexContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={styles.formContainer}>
           <TextInput
-            placeholder="Item Amount"
-            placeholderTextColor="#999"
-            style={[styles.input, {width: '50%', marginEnd: '4%'}]}
-            keyboardType="numeric"
-            value={stockAmt}
-            onChangeText={setstockAmt}
+            placeholder="Search by name or tags"
+            value={searchText}
+            onChangeText={setSearchText}
+            style={styles.input}
           />
-          <View>
-            {/* Dropdown Implementation */}
-            <TouchableOpacity
-              style={styles.dropdownButton}
-              onPress={() => setIsDropdownOpen(!isDropdownOpen)}>
-              <Text style={styles.dropdownButtonText}>{selectedCategory}</Text>
-            </TouchableOpacity>
-            {isDropdownOpen && (
-              <View style={styles.dropdown}>
-                {categories.map((category, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      setSelectedCategory(category);
-                      setIsDropdownOpen(false);
-                    }}>
-                    <Text style={styles.dropdownItemText}>{category}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
-        </View>
-        <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
-          <TextInput
-            placeholder="Item Quantity"
-            placeholderTextColor="#999"
-            style={[styles.input, styles.inputAmt]}
-            keyboardType="numeric"
-            value={stockQty}
-            onChangeText={setstockQty}
-          />
-          <TextInput
-            placeholder="Min Quantity"
-            placeholderTextColor="#999"
-            style={[styles.input, styles.inputAmt]}
-            keyboardType="numeric"
-            value={stockMinQty}
-            onChangeText={setstockMinQty}
-          />
-        </View>
-        <Pressable
-          style={styles.stockBtn}
-          onPress={() => (isEdit ? updateItem() : addItem())}>
-          <Text style={styles.btnTxt}>
-            {isEdit ? 'EDIT' : 'ADD'} ITEM IN STOCK
-          </Text>
-        </Pressable>
 
-        <View style={{flex: 1}}>
-          <View style={{marginBottom: 5}}>
-            <Text style={{fontSize: 16, marginBottom: 10}}>
-              All items in the stocks
-            </Text>
-            <View style={styles.headingTxtDiv}>
-              <Text style={styles.headingTxt}>Items Name</Text>
-              <View style={{flexDirection: 'row'}}>
-                <Text style={{paddingEnd: '8%'}}>Min QTY</Text>
-                <Text>QTY</Text>
-              </View>
+          <TextInput
+            placeholder="Enter item name..."
+            value={itemName}
+            onChangeText={setItemName}
+            style={styles.input}
+          />
+
+          <View style={styles.row}>
+            <TextInput
+              placeholder="Item Amount"
+              value={stockAmt}
+              keyboardType="numeric"
+              onChangeText={setStockAmt}
+              style={[styles.input, { width: '48%' }]}
+            />
+            <View style={[styles.dropdownContainer, { width: '48%' }]}>
+              <TouchableOpacity
+                style={styles.dropdownButton}
+                onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <Text style={styles.dropdownButtonText}>
+                  {selectedCategory}
+                </Text>
+              </TouchableOpacity>
+              {isDropdownOpen && (
+                <View style={styles.dropdownMenu}>
+                  {categories.map((category, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setSelectedCategory(category);
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownItemText}>{category}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
           </View>
-          <FlatList
-            data={data}
-            keyExtractor={item => item.id.toString()}
-            renderItem={({item}) => (
-              <View
-                style={[
-                  styles.itemContainer,
-                  {
-                    backgroundColor:
-                      item.stock > item.stockMin ? '#D7F68FFF' : '#FFCCCC',
-                  },
-                ]}>
-                <Text style={styles.itemTxt}>{item.name}</Text>
-                <View style={{flexDirection: 'row', gap: 15}}>
-                  <Text style={styles.itemTxt}>
-                    {item.stockMin} {item.category}
-                  </Text>
-                  <Text style={styles.itemTxt}>
-                    {item.stock} {item.category}
-                  </Text>
-                  <Pressable onPress={() => editItem(item)}>
-                    <EditIcon style={styles.icon} fill="#1167b1" />
-                  </Pressable>
-                  <Pressable onPress={() => deleteItem(item.id)}>
-                    <DeleteIcon style={styles.icon} fill="red" />
-                  </Pressable>
-                </View>
-              </View>
-            )}
-            contentContainerStyle={{gap: 10, paddingBottom: 10}}
+
+          <View style={styles.row}>
+            <TextInput
+              placeholder="Item Quantity"
+              value={stockQty}
+              keyboardType="numeric"
+              onChangeText={setStockQty}
+              style={[styles.input, styles.smallInput]}
+            />
+            <TextInput
+              placeholder="Min Quantity"
+              value={stockMinQty}
+              keyboardType="numeric"
+              onChangeText={setStockMinQty}
+              style={[styles.input, styles.smallInput]}
+            />
+          </View>
+
+          <View style={styles.row}>
+            <TextInput
+              placeholder="Shop Name"
+              value={shopName}
+              onChangeText={setShopName}
+              style={[styles.input, styles.smallInput]}
+            />
+            <TextInput
+              placeholder="Link"
+              value={link}
+              onChangeText={setLink}
+              style={[styles.input, styles.smallInput]}
+            />
+          </View>
+
+          <TextInput
+            placeholder="Tags"
+            value={tags}
+            onChangeText={setTags}
+            style={styles.input}
           />
+
+          <TextInput
+            style={styles.textInput}
+            placeholder="Item description"
+            multiline
+            value={description}
+            onChangeText={setDescription}
+          />
+
+          <Pressable
+            style={styles.button}
+            onPress={isEdit ? updateItem : addItem}
+          >
+            <Text style={styles.buttonText}>
+              {isEdit ? 'EDIT ITEM' : 'ADD ITEM'} IN STOCK
+            </Text>
+          </Pressable>
+
+          {isEdit && (
+            <Pressable style={styles.deleteButton} onPress={deleteItem}>
+              <Text style={styles.deleteButtonText}>DELETE ITEM</Text>
+            </Pressable>
+          )}
         </View>
-      </View>
-    </KeyboardAvoidingView>
+
+        <FlatList
+          data={filteredData}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContentContainer}
+          keyboardShouldPersistTaps="always"
+        />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 export default CreateScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingVertical: '4%',
-    paddingHorizontal: 10,
-    gap: 10,
+  safeArea: { flex: 1, backgroundColor: '#F2F2F2' },
+  flexContainer: { flex: 1, padding: 16 },
+  formContainer: {
+    backgroundColor: '#FFF',
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
   },
   input: {
-    borderWidth: 1.5,
-    borderColor: '#999',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
-    borderRadius: 7,
+    marginBottom: 12,
+    backgroundColor: '#FAFAFA',
   },
-  inputAmt: {
-    width: '47%',
-    maxHeight: 45,
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
+  smallInput: {
+    flex: 1,
+    marginRight: 8,
+  },
+  dropdownContainer: { flex: 1, position: 'relative' },
   dropdownButton: {
-    borderWidth: 1.5,
-    borderColor: '#999',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 7,
-    backgroundColor: '#f9f9f9',
-    width: '68%',
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    backgroundColor: '#FAFAFA',
+    padding: 12,
+    justifyContent: 'center',
   },
-  dropdownButtonText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  dropdown: {
-    borderWidth: 1.5,
-    borderColor: '#999',
-    borderRadius: 7,
-    marginTop: 5,
-    backgroundColor: '#fff',
+  dropdownButtonText: { fontSize: 16, color: '#333' },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 50,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    zIndex: 10,
   },
   dropdownItem: {
-    padding: 8,
+    padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomColor: '#EEE',
   },
-  dropdownItemText: {
-    fontSize: 14,
+  dropdownItemText: { fontSize: 16 },
+  textInput: {
+    height: 100,
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#FAFAFA',
+    textAlignVertical: 'top',
+    marginBottom: 12,
   },
-  stockBtn: {
+  button: {
     backgroundColor: '#66FFFF',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 7,
-    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: 'center',
+    marginBottom: 10,
   },
-  btnTxt: {
-    fontWeight: '500',
-    fontSize: 14,
+  buttonText: { fontSize: 16, fontWeight: '600', color: '#333' },
+  deleteButton: {
+    backgroundColor: 'red',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  headingTxtDiv: {
+  deleteButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  listContentContainer: { paddingBottom: 30 },
+  listItem: {
+    padding: 12,
+    borderRadius: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '68%',
-    paddingStart: '3%',
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  headingTxt: {
-    fontWeight: '500',
-    fontSize: 14,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 7,
-  },
-  icon: {
-    height: 20,
-    width: 20,
-    marginStart: 5,
-  },
+  itemText: { fontSize: 16, color: '#333' },
+  itemActions: { flexDirection: 'row', alignItems: 'center' },
+  icon: { width: 20, height: 20, marginLeft: 8 },
 });
