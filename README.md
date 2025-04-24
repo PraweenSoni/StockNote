@@ -62,7 +62,13 @@ Now that you have successfully run the app, let's modify it.
 
 If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
 
-# What next (Features) :-
+# Features :-
+
+ - Add and categorize Data.
+ - Avoid duplicate data entry
+ - Search item using Name & Tags
+ - Also improve logic of min Qty and qty because when i parchase then it will qual then it show me low item but not 
+# What next :-
 
  - Add and categorize expenses.
  - Display a list of transactions.

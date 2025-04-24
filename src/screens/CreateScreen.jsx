@@ -15,8 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function CreateScreen({ setView, editItem, setEditItem, setShouldReload }) {
   const [item, setItem] = useState('');
   const [stockAmt, setStockAmt] = useState('');
-  const [stockQty, setStockQty] = useState('');
-  const [stockMinQty, setStockMinQty] = useState('');
+  const [stockQty, setStockQty] = useState(0);
+  const [stockMinQty, setStockMinQty] = useState(0);
   const [shopName, setShopName] = useState('');
   const [link, setLink] = useState('');
   const [tag, setTag] = useState('');
@@ -47,6 +47,20 @@ export default function CreateScreen({ setView, editItem, setEditItem, setShould
       return;
     }
 
+    // Retrieve stored data first
+    const existingData = await AsyncStorage.getItem('allData');
+    let allData = existingData ? JSON.parse(existingData) : [];
+
+    // Duplicate Item find code
+    const isDuplicate = allData.some(
+      (existingItem) => existingItem.item.toLowerCase() === item.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      Alert.alert('Validation', 'Item with this name already exists.');
+      return;
+    }
+
     const newItem = {
       id: editItem ? editItem.id : Date.now().toString(),
       item,
@@ -59,9 +73,6 @@ export default function CreateScreen({ setView, editItem, setEditItem, setShould
       description,
       category: selectedCategory,
     };
-
-    const existingData = await AsyncStorage.getItem('allData');
-    let allData = existingData ? JSON.parse(existingData) : [];
 
     if (editItem) {
       allData = allData.map((d) => (d.id === editItem.id ? newItem : d));

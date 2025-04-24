@@ -51,12 +51,13 @@ export default function HomeScreen({ setView, setEditItem, shouldReload, setShou
   });
 
   const renderItem = ({ item }) => {
-    const isLowStock = parseInt(item.stockQty, 10) <= parseInt(item.stockMinQty, 10);
+    const isLowStock = parseInt(item.stockQty, 10) > parseInt(item.stockMinQty, 10);
+    // console.log(isLowStock);
     return (
       <TouchableOpacity
         style={[
           styles.itemCard,
-          { backgroundColor: isLowStock ? '#FFCDD2' : '#E0F7FA' },
+          { backgroundColor: isLowStock ? '#E0F7FA' : '#FFCDD2' },
         ]}
         onLongPress={() => handleLongPress(item)} // Long press to edit
       >
