@@ -1,339 +1,199 @@
 import React, { useState, useEffect } from 'react';
 import {
-  SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  ScrollView,
-  TextInput,
   View,
-  Pressable,
+  TextInput,
+  Button,
+  StyleSheet,
+  Keyboard,
+  TouchableWithoutFeedback,
+  Alert,
   Text,
   TouchableOpacity,
-  FlatList,
-  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DeleteIcon from '../../assets/icons/DeleteIcon';
-import EditIcon from '../../assets/icons/EditIcon';
 
-const CreateScreen = ({ route }) => {
-  const [itemName, setItemName] = useState('');
+export default function CreateScreen({ setView, editItem, setEditItem, setShouldReload }) {
+  const [item, setItem] = useState('');
   const [stockAmt, setStockAmt] = useState('');
   const [stockQty, setStockQty] = useState('');
   const [stockMinQty, setStockMinQty] = useState('');
-  const [description, setDescription] = useState('');
   const [shopName, setShopName] = useState('');
   const [link, setLink] = useState('');
-  const [tags, setTags] = useState('');
-  const [isEdit, setIsEdit] = useState(false);
-  const [editItemId, setEditItemId] = useState(null);
+  const [tag, setTag] = useState('');
+  const [description, setDescription] = useState('');
 
+  // Drop down code 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
   const categories = ['Low', 'Medium', 'High', 'CTM'];
 
-  const [data, setData] = useState([]);
-  const [searchText, setSearchText] = useState('');
-
   useEffect(() => {
-    const fetchData = async () => {
-      const storedData = await AsyncStorage.getItem('stockData');
-      if (storedData) {
-        setData(JSON.parse(storedData));
-      }
-    };
-    fetchData();
-  }, []);
-
-  const saveData = async (newData) => {
-    await AsyncStorage.setItem('stockData', JSON.stringify(newData));
-    setData(newData);
-  };
-
-  const resetInputs = () => {
-    setItemName('');
-    setStockAmt('');
-    setStockQty('');
-    setStockMinQty('');
-    setShopName('');
-    setLink('');
-    setTags('');
-    setDescription('');
-    setSelectedCategory('Select Category');
-    setIsEdit(false);
-    setEditItemId(null);
-  };
-
-  const addItem = () => {
-    if (!itemName) {
-      alert('Item name is required!');
+    if (editItem) {
+      setItem(editItem.item);
+      setStockAmt(editItem.stockAmt);
+      setStockQty(editItem.stockQty);
+      setStockMinQty(editItem.stockMinQty);
+      setShopName(editItem.shopName);
+      setLink(editItem.link);
+      setTag(editItem.tag);
+      setDescription(editItem.description);
+      if (editItem.category) setSelectedCategory(editItem.category);
+    }
+  }, [editItem]);
+  
+  const saveItem = async () => {
+    if (!item.trim()) {
+      Alert.alert('Validation', 'Item name is required');
       return;
     }
-    const isDuplicate = data.some(
-      (item) => item.name.toLowerCase() === itemName.toLowerCase()
-    );
-    if (isDuplicate) {
-      alert('Item with this name already exists.');
-      return;
-    }
+
     const newItem = {
-      id: Date.now(),
-      name: itemName,
-      amount: stockAmt,
-      stock: stockQty,
-      stockMin: stockMinQty,
+      id: editItem ? editItem.id : Date.now().toString(),
+      item,
+      stockAmt,
       category: selectedCategory,
+      stockQty,
+      stockMinQty,
       shopName,
       link,
-      tags,
+      tag,
       description,
     };
-    const newData = [...data, newItem];
-    saveData(newData);
-    resetInputs();
+
+    const existingData = await AsyncStorage.getItem('allData');
+    let allData = existingData ? JSON.parse(existingData) : [];
+
+    if (editItem) {
+      allData = allData.map((d) => (d.id === editItem.id ? newItem : d));
+    } else {
+      allData.push(newItem);
+    }
+
+    await AsyncStorage.setItem('allData', JSON.stringify(allData));
+    setShouldReload(prev => !prev);
+    setEditItem(null);
+    setView('home');
   };
 
-  const editItem = (item) => {
-    setIsEdit(true);
-    setEditItemId(item.id);
-    setItemName(item.name);
-    setStockAmt(item.amount);
-    setStockQty(item.stock);
-    setStockMinQty(item.stockMin);
-    setShopName(item.shopName || '');
-    setLink(item.link || '');
-    setTags(item.tags || '');
-    setDescription(item.description || '');
-    setSelectedCategory(item.category || 'Select Category');
-  };
+  const deleteItem = async () => {
+    if (!editItem) return;
 
-  const updateItem = () => {
-    const updatedData = data.map((item) =>
-      item.id === editItemId
-        ? {
-          ...item,
-          name: itemName,
-          amount: stockAmt,
-          stock: stockQty,
-          stockMin: stockMinQty,
-          category: selectedCategory,
-          shopName,
-          link,
-          tags,
-          description,
-        }
-        : item
-    );
-    saveData(updatedData);
-    resetInputs();
-  };
+    const existingData = await AsyncStorage.getItem('allData');
+    let allData = existingData ? JSON.parse(existingData) : [];
 
-  const deleteItem = () => {
-    Alert.alert(
-      'Delete Confirmation',
-      'Are you sure you want to delete this item?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            const filteredData = data.filter((item) => item.id !== editItemId);
-            saveData(filteredData);
-            resetInputs();
-          },
-        },
-      ]
-    );
-  };
+    allData = allData.filter((d) => d.id !== editItem.id);
 
-  const filteredData = data.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.tags.toLowerCase().includes(searchText.toLowerCase());
-    return matchesSearch;
-  });
-
-  const renderItem = ({ item }) => {
-    const isLowStock = parseInt(item.stock) <= parseInt(item.stockMin);
-    return (
-      <TouchableOpacity
-        style={[
-          styles.listItem,
-          { backgroundColor: isLowStock ? '#FFCDD2' : '#E0F7FA' },
-        ]}
-        onLongPress={() => editItem(item)}
-      >
-        <View>
-          <Text style={styles.itemText}>{item.name}</Text>
-          <Text style={styles.itemText}>Qty: {item.stock}</Text>
-        </View>
-        <View style={styles.itemActions}>
-          <Pressable onPress={() => editItem(item)}>
-            <EditIcon style={styles.icon} fill="#1167b1" />
-          </Pressable>
-        </View>
-      </TouchableOpacity>
-    );
+    await AsyncStorage.setItem('allData', JSON.stringify(allData));
+    setShouldReload(prev => !prev);
+    setEditItem(null);
+    setView('home');
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.flexContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
-          <View style={styles.formContainer}>
-            <TextInput
-              placeholder="Search by name or tags"
-              value={searchText}
-              onChangeText={setSearchText}
-              style={styles.input}
-            />
-
-            <TextInput
-              placeholder="Enter item name..."
-              value={itemName}
-              onChangeText={setItemName}
-              style={styles.input}
-            />
-
-            <View style={styles.row}>
-              <TextInput
-                placeholder="Item Amount"
-                value={stockAmt}
-                keyboardType="numeric"
-                onChangeText={setStockAmt}
-                style={[styles.input, { width: '48%' }]}
-              />
-              <View style={[styles.dropdownContainer, { width: '48%' }]}>
-                <TouchableOpacity
-                  style={styles.dropdownButton}
-                  onPress={() => setIsDropdownOpen(!isDropdownOpen)}
-                >
-                  <Text style={styles.dropdownButtonText}>
-                    {selectedCategory}
-                  </Text>
-                </TouchableOpacity>
-                {isDropdownOpen && (
-                  <View style={styles.dropdownMenu}>
-                    {categories.map((category, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={styles.dropdownItem}
-                        onPress={() => {
-                          setSelectedCategory(category);
-                          setIsDropdownOpen(false);
-                        }}
-                      >
-                        <Text style={styles.dropdownItemText}>{category}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </View>
-            </View>
-
-            <View style={styles.row}>
-              <TextInput
-                placeholder="Item Quantity"
-                value={stockQty}
-                keyboardType="numeric"
-                onChangeText={setStockQty}
-                style={[styles.input, styles.smallInput]}
-              />
-              <TextInput
-                placeholder="Min Quantity"
-                value={stockMinQty}
-                keyboardType="numeric"
-                onChangeText={setStockMinQty}
-                style={[styles.input, styles.smallInput]}
-              />
-            </View>
-
-            <View style={styles.row}>
-              <TextInput
-                placeholder="Shop Name"
-                value={shopName}
-                onChangeText={setShopName}
-                style={[styles.input, styles.smallInput]}
-              />
-              <TextInput
-                placeholder="Link"
-                value={link}
-                onChangeText={setLink}
-                style={[styles.input, styles.smallInput]}
-              />
-            </View>
-
-            <TextInput
-              placeholder="Tags"
-              value={tags}
-              onChangeText={setTags}
-              style={styles.input}
-            />
-
-            <TextInput
-              style={styles.textInput}
-              placeholder="Item description"
-              multiline
-              value={description}
-              onChangeText={setDescription}
-            />
-
-            <Pressable
-              style={styles.button}
-              onPress={isEdit ? updateItem : addItem}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View>
+        <TextInput
+          placeholder="Item"
+          value={item}
+          onChangeText={setItem}
+          style={styles.input}
+        />
+        <View style={styles.row}>
+          <TextInput
+            placeholder="Item Amount"
+            value={stockAmt}
+            keyboardType="numeric"
+            onChangeText={setStockAmt}
+            style={[styles.input, { width: '48%' }]}
+          />
+          <View style={[styles.dropdownContainer, { width: '48%' }]}>
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => setIsDropdownOpen(!isDropdownOpen)}
             >
-              <Text style={styles.buttonText}>
-                {isEdit ? 'EDIT ITEM' : 'ADD ITEM'} IN STOCK
+              <Text style={styles.dropdownButtonText}>
+                {selectedCategory}
               </Text>
-            </Pressable>
-
-            {isEdit && (
-              <Pressable style={styles.deleteButton} onPress={deleteItem}>
-                <Text style={styles.deleteButtonText}>DELETE ITEM</Text>
-              </Pressable>
+            </TouchableOpacity>
+            {isDropdownOpen && (
+              <View style={styles.dropdownMenu}>
+                {categories.map((category, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setSelectedCategory(category);
+                      setIsDropdownOpen(false);
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>{category}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             )}
           </View>
-        </ScrollView>
-        <FlatList
-          data={filteredData}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContentContainer}
-          keyboardShouldPersistTaps="always"
-        />
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
-};
+        </View>
+        <View style={styles.row}>
+          <TextInput
+            placeholder="Item Quantity"
+            value={stockQty}
+            keyboardType="numeric"
+            onChangeText={setStockQty}
+            style={[styles.input, styles.smallInput]}
+          />
+          <TextInput
+            placeholder="Min Quantity"
+            value={stockMinQty}
+            keyboardType="numeric"
+            onChangeText={setStockMinQty}
+            style={[styles.input, styles.smallInput]}
+          />
+        </View>
 
-export default CreateScreen;
+        <View style={styles.row}>
+          <TextInput
+            placeholder="Shop Name"
+            value={shopName}
+            onChangeText={setShopName}
+            style={[styles.input, styles.smallInput]}
+          />
+          <TextInput
+            placeholder="Link"
+            value={link}
+            onChangeText={setLink}
+            style={[styles.input, styles.smallInput]}
+          />
+        </View>
+        <TextInput
+          placeholder="Tag"
+          value={tag}
+          onChangeText={setTag}
+          style={styles.input}
+        />
+        <TextInput
+          style={styles.textInput}
+          placeholder="Description"
+          value={description}
+          onChangeText={setDescription}
+        />
+
+        <Button title={editItem ? 'Update Item' : 'Add Item'} onPress={saveItem} />
+        {editItem && (
+          <View style={{ marginTop: 10 }}>
+            <Button title="Delete Item" color="red" onPress={deleteItem} />
+          </View>
+        )}
+      </View>
+    </TouchableWithoutFeedback>
+  );
+}
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F2F2F2' },
-  flexContainer: { flex: 1, padding: 16 },
-  formContainer: {
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderRadius: 10,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-  },
   input: {
     borderWidth: 1,
     borderColor: '#DDD',
     borderRadius: 8,
-    padding: 12,
+    padding: 10,
     fontSize: 16,
     marginBottom: 12,
     backgroundColor: '#FAFAFA',
@@ -341,13 +201,12 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
   },
   smallInput: {
     flex: 1,
     marginRight: 8,
   },
-  dropdownContainer: { flex: 1, position: 'relative' },
+  dropdownContainer: { flex: 1, position: 'relative', marginStart: 8},
   dropdownButton: {
     borderWidth: 1,
     borderColor: '#DDD',
