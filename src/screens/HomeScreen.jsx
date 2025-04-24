@@ -14,6 +14,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function HomeScreen({ setView, setEditItem, shouldReload, setShouldReload }) {
   const [items, setItems] = useState([]);
   const [view, setview] = useState(0);
+  // New state for search input
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,43 +25,68 @@ export default function HomeScreen({ setView, setEditItem, shouldReload, setShou
     };
 
     fetchData();
-  }, [shouldReload]);  // Will reload items whenever `shouldReload` changes
+  }, [shouldReload]);
 
   const handleLongPress = (item) => {
-    setEditItem(item);   // Set the item to be edited
-    setView('create');   // Switch to CreateScreen for editing
+    setEditItem(item); // Set the item to be edited
+    setView('create'); // Switch to the CreateScreen for editing
   };
 
-  // Filter items based on the selected view:
+  // Filter items based on both the selected view and the search term
   const filteredItems = items.filter(item => {
+    // search filter (if searchTerm exists)
+    if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
+      const nameMatch = item.item && item.item.toLowerCase().includes(lowerSearch);
+      const tagMatch = item.tag && item.tag.toLowerCase().includes(lowerSearch);
+      if (!nameMatch && !tagMatch) {
+        return false;
+      }
+    }
+
+    // filtering logic
     if (view === 0) {
       return true;
     } else if (view === 1) {
-      // Low stock items only (e.g., stockQty <= stockMinQty)
-      return parseInt(item.stockQty, 10) <= parseInt(item.stockMinQty, 10);
+      const qty = parseInt(item.stockQty, 10);
+      const minQty = parseInt(item.stockMinQty, 10);
+      // If both values are 0, list it as low stock.
+      if (qty === 0 && minQty === 0) {
+        return true;
+      }
+      return qty < minQty;
     } else if (view === 2) {
-      // Items with tag "high"
+      // Items with category "high"
       return item.category && item.category.toLowerCase() === 'high';
     } else if (view === 3) {
-      // Items with tag "medium"
+      // Items with category "medium"
       return item.category && item.category.toLowerCase() === 'medium';
     } else if (view === 4) {
-      // Items with tag "low"
+      // Items with category "low"
       return item.category && item.category.toLowerCase() === 'low';
     }
     return true;
   });
 
   const renderItem = ({ item }) => {
-    const isLowStock = parseInt(item.stockQty, 10) > parseInt(item.stockMinQty, 10);
-    // console.log(isLowStock);
+    const qty = parseInt(item.stockQty, 10);
+    const minQty = parseInt(item.stockMinQty, 10);
+    let itemBackgroundColor;
+    if (qty === 0 && minQty === 0) {
+      itemBackgroundColor = '#FFCDD2';
+    } else if (qty !== 0 && minQty !== 0 && qty === minQty) {
+      itemBackgroundColor = '#C8E6C9';
+    } else {
+      itemBackgroundColor = qty > minQty ? '#E0F7FA' : '#FFCDD2';
+    }
+
     return (
       <TouchableOpacity
         style={[
           styles.itemCard,
-          { backgroundColor: isLowStock ? '#E0F7FA' : '#FFCDD2' },
+          { backgroundColor: itemBackgroundColor },
         ]}
-        onLongPress={() => handleLongPress(item)} // Long press to edit
+        onLongPress={() => handleLongPress(item)}
       >
         <Text style={styles.itemName}>{item.item}</Text>
         <Text style={styles.itemDetails}>{item.link}</Text>
@@ -84,13 +111,12 @@ export default function HomeScreen({ setView, setEditItem, shouldReload, setShou
         <Text style={styles.title}>
           <Pressable onPress={() => {
             setView('create');
-            setEditItem(null); // Make sure there is no item to edit when creating new
+            setEditItem(null); // Ensure there is no item to edit when creating new
           }}>
             <Image
               source={require('../../assets/add.gif')}
               style={styles.image}
             />
-            {/* <SettingIcon style={styles.Sicon} /> */}
           </Pressable>
         </Text>
       </View>
@@ -148,7 +174,7 @@ export default function HomeScreen({ setView, setEditItem, shouldReload, setShou
           onPress={() => setview(4)}
         >
           <Text style={[styles.btnTxt, view === 4 ? { color: 'red' } : null]}>
-            Low Tag
+            Low
           </Text>
         </Pressable>
       </View>
@@ -157,6 +183,8 @@ export default function HomeScreen({ setView, setEditItem, shouldReload, setShou
         style={styles.searchBox}
         placeholder="Search by name or tags..."
         placeholderTextColor="#777"
+        value={searchTerm}
+        onChangeText={setSearchTerm}
       />
 
       <FlatList
