@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet, TextInput, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  Pressable,
+  Image,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import SettingIcon from '../../assets/icons/SettingIcon';
 
 export default function HomeScreen({ setView, setEditItem, shouldReload, setShouldReload }) {
   const [items, setItems] = useState([]);
   const [view, setview] = useState(0);
+
   useEffect(() => {
     const fetchData = async () => {
       const storedData = await AsyncStorage.getItem('allData');
@@ -21,10 +30,25 @@ export default function HomeScreen({ setView, setEditItem, shouldReload, setShou
     setView('create');   // Switch to CreateScreen for editing
   };
 
-  // const renderItem = ({ item }) => {
-  //   // Ensure the item has an id and fallback to a generated one if it's missing
-  //   const itemId = item.id ? item.id.toString() : `${Math.random()}`;
-
+  // Filter items based on the selected view:
+  const filteredItems = items.filter(item => {
+    if (view === 0) {
+      return true;
+    } else if (view === 1) {
+      // Low stock items only (e.g., stockQty <= stockMinQty)
+      return parseInt(item.stockQty, 10) <= parseInt(item.stockMinQty, 10);
+    } else if (view === 2) {
+      // Items with tag "high"
+      return item.category && item.category.toLowerCase() === 'high';
+    } else if (view === 3) {
+      // Items with tag "medium"
+      return item.category && item.category.toLowerCase() === 'medium';
+    } else if (view === 4) {
+      // Items with tag "low"
+      return item.category && item.category.toLowerCase() === 'low';
+    }
+    return true;
+  });
 
   const renderItem = ({ item }) => {
     const isLowStock = parseInt(item.stockQty, 10) <= parseInt(item.stockMinQty, 10);
@@ -58,20 +82,26 @@ export default function HomeScreen({ setView, setEditItem, shouldReload, setShou
         <Text style={styles.title}>Dashboard</Text>
         <Text style={styles.title}>
           <Pressable onPress={() => {
-          setView('create');
-          setEditItem(null); // Make sure there is no item to edit when creating new
-        }}>
-            <SettingIcon style={styles.Sicon} />
+            setView('create');
+            setEditItem(null); // Make sure there is no item to edit when creating new
+          }}>
+            <Image
+              source={require('../../assets/add.gif')}
+              style={styles.image}
+            />
+            {/* <SettingIcon style={styles.Sicon} /> */}
           </Pressable>
         </Text>
       </View>
+
       <View style={styles.btnContainer}>
         <Pressable
           style={[
             styles.btn,
             view === 0 ? { backgroundColor: '#72C37AFF' } : null,
           ]}
-          onPress={() => setview(0)}>
+          onPress={() => setview(0)}
+        >
           <Text style={[styles.btnTxt, view === 0 ? { color: '#fff' } : null]}>
             All Items
           </Text>
@@ -81,7 +111,8 @@ export default function HomeScreen({ setView, setEditItem, shouldReload, setShou
             styles.btn,
             view === 1 ? { backgroundColor: '#FFCDD2' } : null,
           ]}
-          onPress={() => setview(1)}>
+          onPress={() => setview(1)}
+        >
           <Text style={[styles.btnTxt, view === 1 ? { color: 'red' } : null]}>
             Low Stock
           </Text>
@@ -91,7 +122,8 @@ export default function HomeScreen({ setView, setEditItem, shouldReload, setShou
             styles.btn,
             view === 2 ? { backgroundColor: '#72C37AFF' } : null,
           ]}
-          onPress={() => setview(2)}>
+          onPress={() => setview(2)}
+        >
           <Text style={[styles.btnTxt, view === 2 ? { color: '#fff' } : null]}>
             High
           </Text>
@@ -101,7 +133,8 @@ export default function HomeScreen({ setView, setEditItem, shouldReload, setShou
             styles.btn,
             view === 3 ? { backgroundColor: '#72C37AFF' } : null,
           ]}
-          onPress={() => setview(3)}>
+          onPress={() => setview(3)}
+        >
           <Text style={[styles.btnTxt, view === 3 ? { color: '#f8fc03' } : null]}>
             Medium
           </Text>
@@ -111,32 +144,25 @@ export default function HomeScreen({ setView, setEditItem, shouldReload, setShou
             styles.btn,
             view === 4 ? { backgroundColor: '#FFCDD2' } : null,
           ]}
-          onPress={() => setview(4)}>
+          onPress={() => setview(4)}
+        >
           <Text style={[styles.btnTxt, view === 4 ? { color: 'red' } : null]}>
-            low
+            Low Tag
           </Text>
         </Pressable>
       </View>
+
       <TextInput
         style={styles.searchBox}
         placeholder="Search by name or tags..."
-        // value={searchText}
-        // onChangeText={setSearchText}
         placeholderTextColor="#777"
       />
-      {/* <Button
-        title="Create New Item"
-        onPress={() => {
-          setView('create');
-          setEditItem(null); // Make sure there is no item to edit when creating new
-        }}
-      /> */}
-      <FlatList
-        data={items}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id ? item.id.toString() : `${Math.random()}`} // Ensuring valid key
-      />
 
+      <FlatList
+        data={filteredItems}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id ? item.id.toString() : `${Math.random()}`}
+      />
     </View>
   );
 }
@@ -151,9 +177,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-  Sicon: {
-    height: 25,
-    width: 25
+  image: {
+    height: 35,
+    width: 35
   },
   btnContainer: {
     flexDirection: 'row',
@@ -172,7 +198,6 @@ const styles = StyleSheet.create({
     color: 'green',
     fontSize: 12,
   },
-  //new code
   searchBox: {
     borderWidth: 1,
     borderColor: '#DDD',

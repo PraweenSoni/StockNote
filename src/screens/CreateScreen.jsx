@@ -22,7 +22,7 @@ export default function CreateScreen({ setView, editItem, setEditItem, setShould
   const [tag, setTag] = useState('');
   const [description, setDescription] = useState('');
 
-  // Drop down code 
+  // Drop down code
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
   const categories = ['Low', 'Medium', 'High', 'CTM'];
@@ -30,17 +30,17 @@ export default function CreateScreen({ setView, editItem, setEditItem, setShould
   useEffect(() => {
     if (editItem) {
       setItem(editItem.item);
+      setTag(editItem.tag);
+      setDescription(editItem.description);
       setStockAmt(editItem.stockAmt);
       setStockQty(editItem.stockQty);
       setStockMinQty(editItem.stockMinQty);
       setShopName(editItem.shopName);
       setLink(editItem.link);
-      setTag(editItem.tag);
-      setDescription(editItem.description);
       if (editItem.category) setSelectedCategory(editItem.category);
     }
   }, [editItem]);
-  
+
   const saveItem = async () => {
     if (!item.trim()) {
       Alert.alert('Validation', 'Item name is required');
@@ -51,13 +51,13 @@ export default function CreateScreen({ setView, editItem, setEditItem, setShould
       id: editItem ? editItem.id : Date.now().toString(),
       item,
       stockAmt,
-      category: selectedCategory,
       stockQty,
       stockMinQty,
       shopName,
       link,
       tag,
       description,
+      category: selectedCategory,
     };
 
     const existingData = await AsyncStorage.getItem('allData');
@@ -70,7 +70,7 @@ export default function CreateScreen({ setView, editItem, setEditItem, setShould
     }
 
     await AsyncStorage.setItem('allData', JSON.stringify(allData));
-    setShouldReload(prev => !prev);
+    setShouldReload((prev) => !prev);
     setEditItem(null);
     setView('home');
   };
@@ -84,14 +84,14 @@ export default function CreateScreen({ setView, editItem, setEditItem, setShould
     allData = allData.filter((d) => d.id !== editItem.id);
 
     await AsyncStorage.setItem('allData', JSON.stringify(allData));
-    setShouldReload(prev => !prev);
+    setShouldReload((prev) => !prev);
     setEditItem(null);
     setView('home');
   };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View>
+      <View style={styles.container}>
         <TextInput
           placeholder="Item"
           value={item}
@@ -183,12 +183,28 @@ export default function CreateScreen({ setView, editItem, setEditItem, setShould
             <Button title="Delete Item" color="red" onPress={deleteItem} />
           </View>
         )}
+        {/* Button to go back to Home Screen */}
+        <View style={{ marginTop: 10 }}>
+          <Button
+            title="Back to Home"
+            color="gray"
+            onPress={() => {
+              setEditItem(null);
+              setView('home');
+            }}
+          />
+        </View>
       </View>
     </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#FFF',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#DDD',
@@ -206,7 +222,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
-  dropdownContainer: { flex: 1, position: 'relative', marginStart: 8},
+  dropdownContainer: {
+    flex: 1,
+    position: 'relative',
+    marginStart: 8,
+  },
   dropdownButton: {
     borderWidth: 1,
     borderColor: '#DDD',
@@ -215,7 +235,10 @@ const styles = StyleSheet.create({
     padding: 12,
     justifyContent: 'center',
   },
-  dropdownButtonText: { fontSize: 16, color: '#333' },
+  dropdownButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
   dropdownMenu: {
     position: 'absolute',
     top: 50,
@@ -232,7 +255,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#EEE',
   },
-  dropdownItemText: { fontSize: 16 },
+  dropdownItemText: {
+    fontSize: 16,
+  },
   textInput: {
     height: 100,
     borderWidth: 1,
@@ -244,32 +269,4 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     marginBottom: 12,
   },
-  button: {
-    backgroundColor: '#66FFFF',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  buttonText: { fontSize: 16, fontWeight: '600', color: '#333' },
-  deleteButton: {
-    backgroundColor: 'red',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  deleteButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
-  listContentContainer: { paddingBottom: 30 },
-  listItem: {
-    padding: 12,
-    borderRadius: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  itemText: { fontSize: 16, color: '#333' },
-  itemActions: { flexDirection: 'row', alignItems: 'center' },
-  icon: { width: 20, height: 20, marginLeft: 8 },
 });
