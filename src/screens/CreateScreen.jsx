@@ -51,8 +51,13 @@ export default function CreateScreen({ setView, editItem, setEditItem, setShould
     const existingData = await AsyncStorage.getItem('allData');
     let allData = existingData ? JSON.parse(existingData) : [];
 
-    // Duplicate Item find code
-    const isDuplicate = allData.some(
+    // Duplicate Item check update:
+    // If we're in edit mode, exclude the current editItem from the duplicate check.
+    const dataToCheck = editItem 
+      ? allData.filter(existingItem => existingItem.id !== editItem.id)
+      : allData;
+
+    const isDuplicate = dataToCheck.some(
       (existingItem) => existingItem.item.toLowerCase() === item.toLowerCase()
     );
 
@@ -147,16 +152,16 @@ export default function CreateScreen({ setView, editItem, setEditItem, setShould
         <View style={styles.row}>
           <TextInput
             placeholder="Item Quantity"
-            value={stockQty}
+            value={stockQty.toString()}
             keyboardType="numeric"
-            onChangeText={setStockQty}
+            onChangeText={(val) => setStockQty(parseInt(val) || 0)}
             style={[styles.input, styles.smallInput]}
           />
           <TextInput
             placeholder="Min Quantity"
-            value={stockMinQty}
+            value={stockMinQty.toString()}
             keyboardType="numeric"
-            onChangeText={setStockMinQty}
+            onChangeText={(val) => setStockMinQty(parseInt(val) || 0)}
             style={[styles.input, styles.smallInput]}
           />
         </View>

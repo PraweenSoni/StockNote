@@ -67,7 +67,7 @@ If you can't get this to work, see the [Troubleshooting](https://reactnative.dev
  - Add and categorize Data.
  - Avoid duplicate data entry
  - Search item using Name & Tags
- - Also improve logic of min Qty and qty because when i parchase then it will qual then it show me low item but not 
+
 # What next :-
 
  - Add and categorize expenses.
